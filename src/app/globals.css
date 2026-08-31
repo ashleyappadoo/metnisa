@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #111111;
+  --paper: #f7f5f0;
+  --red: #e8444a;
+  --blue: #2877c7;
+  --yellow: #f2c94c;
+  --green: #319466;
+  --muted: #6f6b64;
+  --line: #dedbd4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.mn-gradient-text {
+  background: linear-gradient(100deg, var(--red) 0%, var(--blue) 34%, var(--yellow) 68%, var(--green) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.mn-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+}

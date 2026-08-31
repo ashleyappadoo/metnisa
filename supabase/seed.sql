@@ -1,0 +1,3 @@
+-- Sprint 0 intentionally contains no auth user seed.
+-- Create the first user in Supabase Auth, then promote it manually:
+-- update public.profiles set role = 'OWNER' where email = 'YOUR_EMAIL';
