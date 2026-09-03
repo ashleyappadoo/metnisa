@@ -64,9 +64,13 @@ async function printifyFetch<T>(path: string, init: RequestInit = {}): Promise<T
   if (!response.ok) {
     const body = await response.text();
     throw new PrintifyApiError(
-      `Printify API request failed (${response.status}): ${body.slice(0, 500)}`,
+      `Printify API request failed (${response.status}): ${body.slice(0, 1000)}`,
       response.status,
     );
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return (await response.json()) as T;
@@ -84,5 +88,39 @@ export function listPrintifyProducts(shopId: number, page = 1, limit = 10) {
 
   return printifyFetch<PrintifyProductList>(
     `/shops/${shopId}/products.json?${params.toString()}`,
+  );
+}
+
+export function getPrintifyProduct(shopId: number, productId: string) {
+  return printifyFetch<Record<string, unknown>>(
+    `/shops/${shopId}/products/${productId}.json`,
+  );
+}
+
+export function uploadPrintifyImage(fileName: string, contents: string) {
+  return printifyFetch<{
+    id: string;
+    file_name: string;
+    height: number;
+    width: number;
+    size: number;
+    mime_type: string;
+    preview_url: string;
+  }>("/uploads/images.json", {
+    method: "POST",
+    body: JSON.stringify({ file_name: fileName, contents }),
+  });
+}
+
+export function createPrintifyProduct(
+  shopId: number,
+  payload: Record<string, unknown>,
+) {
+  return printifyFetch<Record<string, unknown>>(
+    `/shops/${shopId}/products.json`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
   );
 }
