@@ -144,13 +144,22 @@ async function renderArtwork(phrase: string, edition: Edition) {
     .toBuffer();
 }
 
-function enabledVariantIds(product: Record<string, unknown>) {
-  if (!Array.isArray(product.variants)) return [];
-  return product.variants.flatMap((variant) => {
-    if (!variant || typeof variant !== "object") return [];
+function variantState(product: Record<string, unknown>) {
+  if (!Array.isArray(product.variants)) {
+    return { allIds: [] as number[], enabledIds: [] as number[] };
+  }
+
+  const allIds: number[] = [];
+  const enabledIds: number[] = [];
+  for (const variant of product.variants) {
+    if (!variant || typeof variant !== "object") continue;
     const data = variant as { id?: unknown; is_enabled?: boolean };
-    return data.is_enabled && Number.isFinite(Number(data.id)) ? [Number(data.id)] : [];
-  });
+    const id = Number(data.id);
+    if (!Number.isFinite(id)) continue;
+    allIds.push(id);
+    if (data.is_enabled) enabledIds.push(id);
+  }
+  return { allIds, enabledIds };
 }
 
 async function uploadUnique(
@@ -159,8 +168,6 @@ async function uploadUnique(
   usedIds: Set<string>,
 ) {
   for (let attempt = 1; attempt <= 6; attempt += 1) {
-    // Printify occasionally returned the previous upload when requests were made
-    // too close together. Keep uploads deliberately serialized and spaced.
     await sleep(attempt === 1 ? 1800 : 2500);
     const attemptName = item.fileName.replace(
       /\.png$/,
@@ -211,18 +218,20 @@ export async function GET(request: Request) {
 
     for (const item of ITEMS) {
       const product = await getPrintifyProduct(SHOP_ID, item.productId);
-      const variantIds = enabledVariantIds(product);
-      if (!variantIds.length) {
-        throw new Error(`No enabled variants found on ${item.productId}`);
+      const { allIds, enabledIds } = variantState(product);
+      if (!allIds.length || !enabledIds.length) {
+        throw new Error(`Variant state invalid on ${item.productId}`);
       }
 
       const artwork = await renderArtwork(item.phrase, item.edition);
       const { uploaded, metadata, attempt } = await uploadUnique(item, artwork, usedIds);
 
+      // Printify validates print area coverage against the entire blueprint/provider
+      // variant set, even though only a subset is enabled for sale.
       await updatePrintifyProduct(SHOP_ID, item.productId, {
         print_areas: [
           {
-            variant_ids: variantIds,
+            variant_ids: allIds,
             placeholders: [
               {
                 position: "front",
@@ -263,6 +272,11 @@ export async function GET(request: Request) {
         throw new Error(`Front image replacement did not persist for ${item.productId}`);
       }
 
+      const checkState = variantState(check);
+      if (checkState.enabledIds.length !== enabledIds.length) {
+        throw new Error(`Enabled variant count changed unexpectedly for ${item.productId}`);
+      }
+
       repaired.push({
         product_id: item.productId,
         phrase: item.phrase,
@@ -270,7 +284,8 @@ export async function GET(request: Request) {
         image_id: uploaded.id,
         file_name: metadata.file_name,
         upload_attempt: attempt,
-        enabled_variants: variantIds.length,
+        total_variants: allIds.length,
+        enabled_variants: enabledIds.length,
         visible: check.visible ?? null,
       });
     }
