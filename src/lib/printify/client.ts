@@ -38,10 +38,21 @@ export type PrintifyCatalogVariant = {
     position: string;
     height?: number;
     width?: number;
+    decoration_method?: string;
   }>;
   cost?: number;
   is_enabled?: boolean;
   is_available?: boolean;
+};
+
+export type PrintifyUploadedImage = {
+  id: string;
+  file_name: string;
+  height: number;
+  width: number;
+  size: number;
+  mime_type: string;
+  preview_url: string;
 };
 
 export class PrintifyApiError extends Error {
@@ -112,6 +123,20 @@ export function getPrintifyProduct(shopId: number, productId: string) {
   );
 }
 
+export function updatePrintifyProduct(
+  shopId: number,
+  productId: string,
+  payload: Record<string, unknown>,
+) {
+  return printifyFetch<Record<string, unknown>>(
+    `/shops/${shopId}/products/${productId}.json`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
 export function getPrintifyCatalogVariants(
   blueprintId: number,
   printProviderId: number,
@@ -122,18 +147,14 @@ export function getPrintifyCatalogVariants(
 }
 
 export function uploadPrintifyImage(fileName: string, contents: string) {
-  return printifyFetch<{
-    id: string;
-    file_name: string;
-    height: number;
-    width: number;
-    size: number;
-    mime_type: string;
-    preview_url: string;
-  }>("/uploads/images.json", {
+  return printifyFetch<PrintifyUploadedImage>("/uploads/images.json", {
     method: "POST",
     body: JSON.stringify({ file_name: fileName, contents }),
   });
+}
+
+export function getPrintifyUploadedImage(imageId: string) {
+  return printifyFetch<PrintifyUploadedImage>(`/uploads/${imageId}.json`);
 }
 
 export function createPrintifyProduct(
