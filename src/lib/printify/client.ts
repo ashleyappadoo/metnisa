@@ -30,6 +30,20 @@ export type PrintifyProductList = {
   total?: number;
 };
 
+export type PrintifyCatalogVariant = {
+  id: number;
+  title: string;
+  options?: Record<string, string | number>;
+  placeholders?: Array<{
+    position: string;
+    height?: number;
+    width?: number;
+  }>;
+  cost?: number;
+  is_enabled?: boolean;
+  is_available?: boolean;
+};
+
 export class PrintifyApiError extends Error {
   status: number;
 
@@ -56,6 +70,7 @@ async function printifyFetch<T>(path: string, init: RequestInit = {}): Promise<T
     headers: {
       Authorization: `Bearer ${getPrintifyToken()}`,
       "Content-Type": "application/json",
+      "User-Agent": "MetNisa/1.0",
       ...(init.headers ?? {}),
     },
     cache: "no-store",
@@ -94,6 +109,15 @@ export function listPrintifyProducts(shopId: number, page = 1, limit = 10) {
 export function getPrintifyProduct(shopId: number, productId: string) {
   return printifyFetch<Record<string, unknown>>(
     `/shops/${shopId}/products/${productId}.json`,
+  );
+}
+
+export function getPrintifyCatalogVariants(
+  blueprintId: number,
+  printProviderId: number,
+) {
+  return printifyFetch<{ id: number; variants: PrintifyCatalogVariant[] }>(
+    `/catalog/blueprints/${blueprintId}/print_providers/${printProviderId}/variants.json`,
   );
 }
 
