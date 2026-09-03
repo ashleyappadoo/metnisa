@@ -7,6 +7,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
+// Temporary Preview-only bootstrap endpoint used to discover the connected
+// Printify shop and the current template product. Removed before merge.
 export async function GET() {
   try {
     const shops = await listPrintifyShops();
