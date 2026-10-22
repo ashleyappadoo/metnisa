@@ -136,7 +136,7 @@ export async function GET(request:Request) {
         before_title:d.title,
         after_title:check.title,
         enabled_variants:enabledCheck.length,
-        colors:Array.from(new Set(enabledCheck.map((v:any)=>colorFromTitle(String(v.title||"")))).filter(Boolean)).sort(),
+        colors:Array.from(new Set(enabledCheck.map((v:any)=>colorFromTitle(String(v.title||""))).filter(Boolean))).sort(),
         min_price:Math.min(...enabledCheck.map((v:any)=>Number(v.price)||Infinity)),
         max_price:Math.max(...enabledCheck.map((v:any)=>Number(v.price)||0)),
         safety_length:typeof check.safety_information==="string"?check.safety_information.length:0,
