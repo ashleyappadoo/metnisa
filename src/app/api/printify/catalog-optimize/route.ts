@@ -90,7 +90,6 @@ export async function GET(request:Request) {
           "Restrict Essential tees to five approved light/mid-tone colors",
           "Normalize hoodie prices by size and edition",
           "Add GOGOT/Drop 001 framing where missing",
-          "Copy full EU safety information to Gradient hoodie",
           "Republish title/description/variant changes",
         ],
         artwork_changed:false, print_areas_changed:false,
@@ -98,9 +97,6 @@ export async function GET(request:Request) {
     }
 
     const list = await listPrintifyProducts(SHOP_ID,1,50);
-    const essentialHoodie = await getPrintifyProduct(SHOP_ID,"6abacf296c3b0a18940bf88d") as any;
-    const hoodieSafety = typeof essentialHoodie.safety_information==="string" ? essentialHoodie.safety_information : "";
-
     const changed:any[]=[];
     for (const p of list.data) {
       const d:any = await getPrintifyProduct(SHOP_ID,p.id);
@@ -124,8 +120,6 @@ export async function GET(request:Request) {
         description: normalizeDescription(String(d.description||""),isHoodie),
         variants,
       };
-      if (gradient && hoodieSafety) payload.safety_information = hoodieSafety;
-
       await updatePrintifyProduct(SHOP_ID,d.id,payload);
       const publishStatus = await publishProduct(d.id);
       const check:any = await getPrintifyProduct(SHOP_ID,d.id);
